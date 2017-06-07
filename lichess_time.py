@@ -20,7 +20,7 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
                 self.main, self.increment = [float(v) for v in value.split("+")]
             else:
                 assert value == "-"
-                self.main, self.increment = 1000, 0
+                self.main, self.increment = 0, 0
         elif name == "Site":
             print(value)
     def visit_comment(self, comment):

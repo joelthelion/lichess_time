@@ -7,7 +7,10 @@ library(ggplot2)
 
 li <- read.csv("game_times.csv")
 
-agg <- li %>% group_by(time_control) %>% summarise(mean_time = mean(total_time), N = n()) %>%
+agg <- li %>% group_by(time_control) %>% summarise(mean_time = mean(total_time),
+                                                   median_time = median(total_time),
+                                                   top_90=quantile(total_time,0.9),
+                                                   N = n()) %>%
   arrange(mean_time)
 
 # Control plot ordering
