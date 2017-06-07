@@ -12,7 +12,6 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
     def __init__(self):
         self.clocks = [0,0]
         self.move = -1
-        pass
     def visit_header(self, name, value):
         if name == "TimeControl":
             print(value)
@@ -20,7 +19,7 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
             if "+" in value:
                 self.main, self.increment = [float(v) for v in value.split("+")]
             else:
-                assert(value == "-")
+                assert value == "-"
                 self.main, self.increment = 1000, 0
         elif name == "Site":
             print(value)
