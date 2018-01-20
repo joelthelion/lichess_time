@@ -4,6 +4,7 @@
     Input data: lichess game archives from database.lichess.org
 """
 
+import sys
 import math
 import bz2
 import csv
@@ -49,7 +50,7 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
             else:
                 val = 10.
             loss = val - self.past_val
-            print(val, loss)
+            # print(val, loss)
             self.past_val = val
             player = self.move % 2
             self.centipawn_counts[player] += 1
@@ -63,7 +64,7 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
         self.game_duration = self.increment * self.move + 2 * self.main - self.clocks[0] - self.clocks[1]
         if self.centipawn_counts[0] > 0:
             self.centipawn = {p:self.centipawn[p]/self.centipawn_counts[p]*100. for p in self.centipawn.keys()} 
-            print("centipawn loss: ", self.centipawn)
+            # print("centipawn loss: ", self.centipawn)
         else:
             self.centipawn = {0:None, 1:None}
     def result(self):
@@ -71,10 +72,9 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
                 self.black_elo, self.centipawn[0], self.centipawn[1]
 
 if __name__ == "__main__":
-    lichess_file = bz2.open("./lichess_db_standard_rated_2017-05.pgn.bz2", "rt")
     with open("game_times.csv","wt") as output:
         writer = csv.writer(output)
         writer.writerow(["time_control","main","increment","total_time","white_elo","black_elo","white_cpwn","black_cpwn"])
         while True:
-            time_control, main, increment, total_time, white_elo, black_elo, white_cpwn, black_cpwn = chess.pgn.read_game(lichess_file, TimeChessGameVisitor)
+            time_control, main, increment, total_time, white_elo, black_elo, white_cpwn, black_cpwn = chess.pgn.read_game(sys.stdin, TimeChessGameVisitor)
             writer.writerow([time_control, main, increment, total_time, white_elo, black_elo, white_cpwn, black_cpwn])

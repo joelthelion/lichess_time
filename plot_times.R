@@ -17,17 +17,17 @@ agg <- li %>% group_by(time_control) %>% summarise(mean_time = mean(total_time),
 agg$time_control <- factor(agg$time_control, levels=agg$time_control)
 li$time_control <- factor(li$time_control, levels=agg$time_control)
 
-qplot(data=agg %>% filter(N>300 & mean_time>300), x=time_control, y=mean_time, size=10)
+qplot(data=agg %>% filter(N>10000 & mean_time>300), x=time_control, y=mean_time, size=10)
 
-classical <- (agg %>% filter(N>1000,mean_time>540 & mean_time<1200))$time_control
+classical <- (agg %>% filter(N>10000,mean_time>540 & mean_time<1200))$time_control
 qplot(data=li %>% filter(time_control %in% classical), x=time_control, y=total_time/60, geom="boxplot") +
   ylab("duration (m)") + coord_cartesian(ylim=c(0,30))
 
-blitz <- (agg %>% filter(N>1000,mean_time>150 & mean_time < 540))$time_control
+blitz <- (agg %>% filter(N>10000,mean_time>150 & mean_time < 540))$time_control
 qplot(data=li %>% filter(time_control %in% blitz), x=time_control, y=total_time/60, geom="boxplot") +
   ylab("duration (m)") + coord_cartesian(ylim=c(0,15))
 
-bullet <- (agg %>% filter(N>100,mean_time<150))$time_control
+bullet <- (agg %>% filter(N>10000,mean_time<150))$time_control
 qplot(data=li %>% filter(time_control %in% bullet), x=time_control, y=total_time/60, geom="boxplot") +
   ylab("duration (m)") + coord_cartesian(ylim=c(0,5))
 
@@ -47,6 +47,6 @@ summary(m)
 
 (300*0.8+25*8)/60
 
-qplot(data=li, x=total_time,y=m$fitted.values) + stat_smooth(method=lm) + xlim(0,1200) + ylim(0,1200) +
-  geom_abline()
+# qplot(data=li, x=total_time,y=m$fitted.values) + stat_smooth(method=lm) + xlim(0,1200) + ylim(0,1200) +
+  # geom_abline()
 
