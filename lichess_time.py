@@ -4,6 +4,7 @@
     Input data: lichess game archives from database.lichess.org
 """
 
+import math
 import bz2
 import csv
 import chess.pgn
@@ -12,9 +13,12 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
     def __init__(self):
         self.clocks = [0,0]
         self.move = -1
+        self.past_val = 0.
+        self.centipawn = {0:0, 1:0}
+        self.centipawn_counts = {0:0, 1:0}
     def visit_header(self, name, value):
         if name == "TimeControl":
-            print(value)
+            # print(value)
             self.time_control = value
             if "+" in value:
                 self.main, self.increment = [float(v) for v in value.split("+")]
@@ -22,18 +26,38 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
                 assert value == "-"
                 self.main, self.increment = 0, 0
         elif name == "Site":
-            print(value)
+            pass
+            # print(value)
     def visit_comment(self, comment):
         if "%clk" in comment:
             raw_clock = comment[6:-1]
             h,m,s = [float(t) for t in raw_clock.split(":")]
             self.clocks[self.move%2] = h*3600 + m*60 + s
+        elif "%eval" in comment:
+            val = comment[7:-1]
+            if not val.startswith("#"):
+                val = float(val)
+                if abs(val)>10:
+                    val = math.copysign(10., val)
+            elif val[1] == "-":
+                val = -10.
+            else:
+                val = 10.
+            loss = val - self.past_val
+            print(val, loss)
+            self.past_val = val
+            player = self.move % 2
+            self.centipawn_counts[player] += 1
+            if (loss>0) != (player == 0):
+                self.centipawn[player] += abs(loss)
         else:
             pass
     def visit_move(self, board, move):
         self.move += 1
     def end_game(self):
         self.game_duration = self.increment * self.move + 2 * self.main - self.clocks[0] - self.clocks[1]
+        if self.centipawn_counts[0] > 0:
+            print("centipawn loss: ", [self.centipawn[p]/self.centipawn_counts[p]*100. for p in [0,1]])
     def result(self):
         return self.time_control, self.main, self.increment, self.game_duration
 
