@@ -13,9 +13,10 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
     def __init__(self):
         self.clocks = [0,0]
         self.move = -1
-        self.past_val = 0.
+        self.past_val = 0.15
         self.centipawn = {0:0, 1:0}
         self.centipawn_counts = {0:0, 1:0}
+        self.white_elo, self.black_elo = None, None
     def visit_header(self, name, value):
         if name == "TimeControl":
             # print(value)
@@ -25,6 +26,10 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
             else:
                 assert value == "-"
                 self.main, self.increment = 0, 0
+        elif name == "WhiteElo":
+            self.white_elo = float(value)
+        elif name == "BlackElo":
+            self.black_elo = float(value)
         elif name == "Site":
             pass
             # print(value)
@@ -57,15 +62,19 @@ class TimeChessGameVisitor(chess.pgn.BaseVisitor):
     def end_game(self):
         self.game_duration = self.increment * self.move + 2 * self.main - self.clocks[0] - self.clocks[1]
         if self.centipawn_counts[0] > 0:
-            print("centipawn loss: ", [self.centipawn[p]/self.centipawn_counts[p]*100. for p in [0,1]])
+            self.centipawn = {p:self.centipawn[p]/self.centipawn_counts[p]*100. for p in self.centipawn.keys()} 
+            print("centipawn loss: ", self.centipawn)
+        else:
+            self.centipawn = {0:None, 1:None}
     def result(self):
-        return self.time_control, self.main, self.increment, self.game_duration
+        return self.time_control, self.main, self.increment, self.game_duration, self.white_elo, \
+                self.black_elo, self.centipawn[0], self.centipawn[1]
 
 if __name__ == "__main__":
     lichess_file = bz2.open("./lichess_db_standard_rated_2017-05.pgn.bz2", "rt")
     with open("game_times.csv","wt") as output:
         writer = csv.writer(output)
-        writer.writerow(["time_control","main","increment","total_time"])
+        writer.writerow(["time_control","main","increment","total_time","white_elo","black_elo","white_cpwn","black_cpwn"])
         while True:
-            time_control, main, increment, total_time = chess.pgn.read_game(lichess_file, TimeChessGameVisitor)
-            writer.writerow([time_control, main, increment, total_time])
+            time_control, main, increment, total_time, white_elo, black_elo, white_cpwn, black_cpwn = chess.pgn.read_game(lichess_file, TimeChessGameVisitor)
+            writer.writerow([time_control, main, increment, total_time, white_elo, black_elo, white_cpwn, black_cpwn])
